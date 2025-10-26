@@ -24,6 +24,7 @@
     "@aws-sdk/client-bedrock-runtime": "^3.917.0",
     "@aws-sdk/client-rekognition": "^3.917.0",
     "@aws-sdk/credential-providers": "^3.916.0",
+    "@google/generative-ai": "^0.24.1",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^5.1.0",

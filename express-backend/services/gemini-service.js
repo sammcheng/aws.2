@@ -1,20 +1,14 @@
 /**
- * AWS Bedrock Service for Accessibility Analysis
- * Uses Claude 3 Sonnet for image analysis
+ * Google Gemini Service for Accessibility Analysis
+ * Uses Gemini 1.5 Flash for image analysis
  */
 
-const { BedrockRuntimeClient, InvokeModelCommand } = require('@aws-sdk/client-bedrock-runtime');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const winston = require('winston');
 
-class BedrockService {
+class GeminiService {
   constructor() {
-        this.bedrockClient = new BedrockRuntimeClient({
-            region: process.env.AWS_DEFAULT_REGION || 'us-east-1',
-            credentials: {
-                accessKeyId: process.env.BEDROCK_ACCESS_KEY_ID,
-                secretAccessKey: process.env.BEDROCK_SECRET_ACCESS_KEY
-            }
-        });
+        this.geminiClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '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');
     
     this.logger = winston.createLogger({
       level: 'info',
@@ -30,48 +24,32 @@ class BedrockService {
 
   async analyzeAccessibility(base64Image, filename) {
     try {
-      this.logger.info('Starting accessibility analysis with Bedrock', { filename });
+      this.logger.info('Starting accessibility analysis with Gemini', { filename });
 
       const prompt = this.createAccessibilityPrompt();
       
-      const input = {
-        modelId: process.env.BEDROCK_MODEL_ID || 'anthropic.claude-3-sonnet-20240229-v1:0',
-        contentType: 'application/json',
-        body: JSON.stringify({
-          anthropic_version: 'bedrock-2023-05-31',
-          max_tokens: 2000,
-          temperature: 0.3,
-          messages: [
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'text',
-                  text: prompt
-                },
-                {
-                  type: 'image',
-                  source: {
-                    type: 'base64',
-                    media_type: 'image/jpeg',
-                    data: base64Image
-                  }
-                }
-              ]
-            }
-          ]
-        })
-      };
-
-      const command = new InvokeModelCommand(input);
-      const response = await this.bedrockClient.send(command);
+      // Get the Gemini model
+      const model = this.geminiClient.getGenerativeModel({ model: "gemini-1.5-flash" });
       
-      const responseBody = JSON.parse(new TextDecoder().decode(response.body));
-      const analysisText = responseBody.content[0].text;
+      // Convert base64 to buffer for Gemini
+      const imageBuffer = Buffer.from(base64Image, 'base64');
+      
+      const result = await model.generateContent([
+        prompt,
+        {
+          inlineData: {
+            data: base64Image,
+            mimeType: "image/jpeg"
+          }
+        }
+      ]);
+      
+      const response = await result.response;
+      const analysisText = response.text();
       
       const structuredResult = this.parseAnalysisResponse(analysisText, filename);
 
-      this.logger.info('Analysis completed', { 
+      this.logger.info('Gemini analysis completed', { 
         filename, 
         score: structuredResult.score 
       });
@@ -79,12 +57,12 @@ class BedrockService {
       return structuredResult;
 
     } catch (error) {
-      this.logger.error('Bedrock analysis failed, using mock analysis', { 
+      this.logger.error('Gemini analysis failed, using mock analysis', { 
         filename, 
         error: error.message 
       });
       
-      // Fallback to mock analysis when Bedrock is blocked
+      // Fallback to mock analysis when Gemini fails
       return this.generateMockAnalysis(filename);
     }
   }
@@ -361,4 +339,4 @@ class BedrockService {
   }
 }
 
-module.exports = BedrockService;
+module.exports = GeminiService;

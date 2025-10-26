@@ -1,17 +1,17 @@
 /**
  * Comprehensive Analysis Service
- * Combines AWS Rekognition object detection with Claude AI analysis
+ * Combines AWS Rekognition object detection with Gemini AI analysis
  * Provides complete accessibility assessment pipeline
  */
 
 const RekognitionService = require('./rekognition-service');
-const BedrockService = require('./bedrock-service');
+const GeminiService = require('./gemini-service');
 const winston = require('winston');
 
 class ComprehensiveAnalysisService {
     constructor() {
         this.rekognitionService = new RekognitionService();
-        this.bedrockService = new BedrockService();
+        this.geminiService = new GeminiService();
         
         this.logger = winston.createLogger({
             level: 'info',
@@ -91,10 +91,10 @@ class ComprehensiveAnalysisService {
             const claudePrompt = this.createClaudePrompt(analysisResults);
             
             try {
-                this.logger.info('Starting Claude analysis');
+                this.logger.info('Starting Gemini analysis');
                 
-                // Use the first image for Claude analysis (or create a summary image)
-                const claudeResult = await this.bedrockService.analyzeAccessibility(
+                // Use the first image for Gemini analysis (or create a summary image)
+                const claudeResult = await this.geminiService.analyzeAccessibility(
                     images[0].base64, 
                     'comprehensive_analysis'
                 );
