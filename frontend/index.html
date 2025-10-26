@@ -2908,9 +2908,9 @@
                             <div class="feature-list">
                                 ${(analysis.accessibility_features || []).map((feature, idx) => `
                                     <div class="feature-item positive-item" style="animation-delay: ${idx * 0.1}s">
-                                        <span class="feature-icon">Feature</span>
-                                        <span class="feature-text">${feature}</span>
-                                    </div>
+                                       
+                                       <span class="feature-text">${feature}</span>
+                                   </div>
                                 `).join('')}
                                 ${(analysis.accessibility_features || []).length === 0 ? '<p class="empty-state">No positive features detected yet.</p>' : ''}
                             </div>
@@ -2928,7 +2928,6 @@
                             <div class="feature-list">
                                 ${(analysis.barriers || []).map((area, idx) => `
                                     <div class="feature-item improvement-item" style="animation-delay: ${idx * 0.1}s">
-                                        <span class="feature-icon">Issue</span>
                                         <span class="feature-text">${area}</span>
                                     </div>
                                 `).join('')}
