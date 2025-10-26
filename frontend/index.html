@@ -999,10 +999,7 @@
                         <h3>🌐 Web Scraping</h3>
                         <p>Enter URLs to scrape images from</p>
                         <input type="url" id="urlInput" class="url-input" placeholder="https://www.zillow.com/homedetails/...">
-                        <div style="display: flex; gap: 10px; margin: 10px 0;">
-                            <input type="number" id="maxImages" class="url-input" placeholder="Max images" value="20" min="1" max="50" style="flex: 1;">
-                            <button class="upload-btn" onclick="scrapeImages()">Scrape Images</button>
-                        </div>
+                        <button class="upload-btn" onclick="scrapeImages()">Scrape Images</button>
                         <div style="margin: 10px 0; padding: 10px; background: #2d3748; border-radius: 8px; font-size: 0.9rem; color: #a0a0a0; border: 1px solid #4a5568;">
                             <strong style="color: #e0e0e0;">💡 Pro Tips:</strong><br>
                             • Try Zillow, Realtor.com, or property sites<br>
@@ -1207,7 +1204,6 @@
 
         async function scrapeImages() {
             const url = document.getElementById('urlInput').value.trim();
-            const maxImages = parseInt(document.getElementById('maxImages').value) || 20;
             const statusDiv = document.getElementById('scrapingStatus');
             
             if (!url) {
@@ -1226,7 +1222,7 @@
             document.getElementById('fileInput').value = '';
 
             try {
-                statusDiv.innerHTML = `<span style="color: blue;">🔄 Scraping up to ${maxImages} images...</span>`;
+                statusDiv.innerHTML = `<span style="color: blue;">🔄 Scraping images...</span>`;
                 
                 // Call the Express backend API instead of browser-based scraping
                 const response = await fetch(`${API_BASE}/api/scrape`, {
@@ -1235,8 +1231,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        url: url,
-                        maxImages: maxImages
+                        url: url
                     })
                 });
 
