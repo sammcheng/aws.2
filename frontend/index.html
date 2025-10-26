@@ -2847,7 +2847,7 @@
                         <div class="score-right">
                             <h3>Overall Accessibility Score</h3>
                             <div class="score-badge ${scoreClass}">${scoreLabel}</div>
-                            <p>Analysis completed</p>
+                            <p>Analysis completed:</p>
                             <div class="score-stats">
                                 <div class="stat-item">
                                     <div class="stat-number">${(analysis.accessibility_features || []).length}</div>
@@ -2900,7 +2900,6 @@
                         <div class="detail-section positive-section">
                             <div class="section-header">
                                 <h3>
-                                    <span class="section-icon-large">Positive</span>
                                     Positive Features
                                 </h3>
                                 <span class="feature-count">${(analysis.accessibility_features || []).length}</span>
@@ -2920,7 +2919,6 @@
                         <div class="detail-section improvement-section">
                             <div class="section-header">
                                 <h3>
-                                    <span class="section-icon-large">Improvement</span>
                                     Areas for Improvement
                                 </h3>
                                 <span class="feature-count">${(analysis.barriers || []).length}</span>
@@ -2939,7 +2937,6 @@
                         <div class="detail-section recommendation-section">
                             <div class="section-header">
                                 <h3>
-                                    <span class="section-icon-large">Recommendation</span>
                                     Actionable Recommendations
                                 </h3>
                                 <span class="feature-count">${(analysis.recommendations || []).length}</span>
