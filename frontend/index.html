@@ -1670,9 +1670,9 @@
                     
                     <div class="analysis-details">
                         <div class="analysis-item">
-                            <h4>✅ Positive Features (${analysis.positive_features?.length || 0})</h4>
+                            <h4>✅ Positive Features (${analysis.accessibility_features?.length || 0})</h4>
                             <div class="features-list">
-                                ${(analysis.positive_features || []).map(feature => `<span class="feature-tag positive">${feature}</span>`).join('')}
+                                ${(analysis.accessibility_features || []).map(feature => `<span class="feature-tag positive">${feature}</span>`).join('')}
                             </div>
                         </div>
                         
