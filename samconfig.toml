@@ -1,0 +1,47 @@
+# SAM configuration file for Accessibility Checker API
+# This file contains deployment configuration for different environments
+
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "accessibility-checker-api"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-XXXXXXXXXX"
+s3_prefix = "accessibility-checker-api"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = [
+    "S3BucketName=accessibility-checker-uploads",
+    "BedrockModelId=anthropic.claude-3-sonnet-20240229-v1:0"
+]
+image_repositories = []
+
+[dev]
+[dev.deploy]
+[dev.deploy.parameters]
+stack_name = "accessibility-checker-api-dev"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-XXXXXXXXXX"
+s3_prefix = "accessibility-checker-api-dev"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = [
+    "S3BucketName=accessibility-checker-uploads-dev",
+    "BedrockModelId=anthropic.claude-3-sonnet-20240229-v1:0"
+]
+image_repositories = []
+
+[prod]
+[prod.deploy]
+[prod.deploy.parameters]
+stack_name = "accessibility-checker-api-prod"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-XXXXXXXXXX"
+s3_prefix = "accessibility-checker-api-prod"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = [
+    "S3BucketName=accessibility-checker-uploads-prod",
+    "BedrockModelId=anthropic.claude-3-sonnet-20240229-v1:0"
+]
+image_repositories = []

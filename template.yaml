@@ -1,0 +1,440 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'Accessibility Checker API - Serverless infrastructure for home accessibility analysis'
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 512
+    Runtime: python3.11
+    Environment:
+      Variables:
+        S3_BUCKET_NAME: !Ref S3Bucket
+        AWS_REGION: !Ref AWS::Region
+        BEDROCK_MODEL_ID: !Ref BedrockModelId
+        CACHE_TABLE_NAME: !Ref CacheTable
+    Layers:
+      - !Ref DependenciesLayer
+    Tracing:
+      Mode: Active
+
+Parameters:
+  S3BucketName:
+    Type: String
+    Default: accessibility-checker-uploads
+    Description: Name of the S3 bucket for storing images
+  
+  BedrockModelId:
+    Type: String
+    Default: anthropic.claude-3-sonnet-20240229-v1:0
+    Description: Bedrock model ID for LLM processing
+
+Resources:
+  # Lambda Layer for Dependencies
+  DependenciesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub '${AWS::StackName}-dependencies'
+      Description: 'Common dependencies for Accessibility Checker API'
+      ContentUri: layers/python/
+      CompatibleRuntimes:
+        - python3.11
+      CompatibleArchitectures:
+        - x86_64
+      RetentionPolicy: Retain
+
+  # DynamoDB Cache Table
+  CacheTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${AWS::StackName}-cache'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: cache_key
+          AttributeType: S
+      KeySchema:
+        - AttributeName: cache_key
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  # S3 Bucket for storing images
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref S3BucketName
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, PUT, POST, DELETE, HEAD]
+            AllowedOrigins: ['*']
+            MaxAge: 3600
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      VersioningConfiguration:
+        Status: Enabled
+
+  # API Gateway
+  AccessibilityCheckerAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: accessibility-checker-api
+      StageName: prod
+      Cors:
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+      DefinitionBody:
+        openapi: 3.0.1
+        info:
+          title: Accessibility Checker API
+          version: 1.0.0
+        paths:
+          /presigned-url:
+            post:
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                httpMethod: POST
+                uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PresignedUrlFunction.Arn}/invocations'
+              responses:
+                '200':
+                  description: 200 response
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+          /analyze:
+            post:
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                httpMethod: POST
+                uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OrchestratorFunction.Arn}/invocations'
+              responses:
+                '200':
+                  description: 200 response
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+
+  # Dead Letter Queue for failed Lambda invocations
+  DeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub '${AWS::StackName}-dlq'
+      MessageRetentionPeriod: 1209600  # 14 days
+      VisibilityTimeoutSeconds: 60
+
+  # Presigned URL Lambda Function
+  PresignedUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: presigned-url-generator
+      CodeUri: lambdas/presigned_url/
+      Handler: lambda_function.lambda_handler
+      ReservedConcurrencyLimit: 10
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt DeadLetterQueue.Arn
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref S3Bucket
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:GeneratePresignedPost
+              Resource: !Sub '${S3Bucket}/*'
+            - Effect: Allow
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt DeadLetterQueue.Arn
+            - Effect: Allow
+              Action:
+                - xray:PutTraceSegments
+                - xray:PutTelemetryRecords
+              Resource: '*'
+      Events:
+        PresignedUrlApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AccessibilityCheckerAPI
+            Path: /presigned-url
+            Method: post
+
+  # Rekognition Lambda Function
+  RekognitionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: rekognition-handler
+      CodeUri: lambdas/rekognition_handler/
+      Handler: lambda_function.lambda_handler
+      ReservedConcurrencyLimit: 20
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref S3Bucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CacheTable
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - rekognition:DetectLabels
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                - xray:PutTraceSegments
+                - xray:PutTelemetryRecords
+              Resource: '*'
+
+  # LLM Lambda Function
+  LLMFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: llm-handler
+      CodeUri: lambdas/llm_handler/
+      Handler: lambda_function.lambda_handler
+      ReservedConcurrencyLimit: 5
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:InvokeModelWithResponseStream
+              Resource: !Sub 'arn:aws:bedrock:${AWS::Region}::foundation-model/*'
+            - Effect: Allow
+              Action:
+                - xray:PutTraceSegments
+                - xray:PutTelemetryRecords
+              Resource: '*'
+
+  # Orchestrator Lambda Function
+  OrchestratorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: orchestrator-handler
+      CodeUri: lambdas/orchestrator/
+      Handler: lambda_function.lambda_handler
+      ReservedConcurrencyLimit: 15
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref S3Bucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CacheTable
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - lambda:InvokeFunction
+              Resource:
+                - !GetAtt RekognitionFunction.Arn
+                - !GetAtt LLMFunction.Arn
+            - Effect: Allow
+              Action:
+                - rekognition:DetectLabels
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:InvokeModelWithResponseStream
+              Resource: !Sub 'arn:aws:bedrock:${AWS::Region}::foundation-model/*'
+            - Effect: Allow
+              Action:
+                - xray:PutTraceSegments
+                - xray:PutTelemetryRecords
+              Resource: '*'
+      Events:
+        AnalyzeApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AccessibilityCheckerAPI
+            Path: /analyze
+            Method: post
+
+  # Lambda execution role for cross-function invocation
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: CrossFunctionInvocation
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !GetAtt RekognitionFunction.Arn
+                  - !GetAtt LLMFunction.Arn
+                  - !GetAtt PresignedUrlFunction.Arn
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource: !Sub '${S3Bucket}/*'
+              - Effect: Allow
+                Action:
+                  - rekognition:DetectLabels
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource: !Sub 'arn:aws:bedrock:${AWS::Region}::foundation-model/*'
+
+  # CloudWatch Log Groups
+  PresignedUrlLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${PresignedUrlFunction}'
+      RetentionInDays: 14
+
+  RekognitionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${RekognitionFunction}'
+      RetentionInDays: 14
+
+  LLMLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${LLMFunction}'
+      RetentionInDays: 14
+
+  OrchestratorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${OrchestratorFunction}'
+      RetentionInDays: 14
+
+  # CloudWatch Alarms for Error Monitoring
+  PresignedUrlErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AWS::StackName}-presigned-url-errors'
+      AlarmDescription: 'Alarm for Presigned URL Lambda errors'
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 5
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref PresignedUrlFunction
+      AlarmActions:
+        - !Ref ErrorNotificationTopic
+
+  RekognitionErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AWS::StackName}-rekognition-errors'
+      AlarmDescription: 'Alarm for Rekognition Lambda errors'
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 5
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref RekognitionFunction
+      AlarmActions:
+        - !Ref ErrorNotificationTopic
+
+  LLMErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AWS::StackName}-llm-errors'
+      AlarmDescription: 'Alarm for LLM Lambda errors'
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 5
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref LLMFunction
+      AlarmActions:
+        - !Ref ErrorNotificationTopic
+
+  OrchestratorErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AWS::StackName}-orchestrator-errors'
+      AlarmDescription: 'Alarm for Orchestrator Lambda errors'
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 5
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref OrchestratorFunction
+      AlarmActions:
+        - !Ref ErrorNotificationTopic
+
+  # SNS Topic for Error Notifications
+  ErrorNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${AWS::StackName}-error-notifications'
+      DisplayName: 'Accessibility Checker Error Notifications'
+
+Outputs:
+  ApiGatewayUrl:
+    Description: 'API Gateway endpoint URL'
+    Value: !Sub 'https://${AccessibilityCheckerAPI}.execute-api.${AWS::Region}.amazonaws.com/prod'
+    Export:
+      Name: !Sub '${AWS::StackName}-ApiGatewayUrl'
+
+  S3BucketName:
+    Description: 'S3 bucket name for storing images'
+    Value: !Ref S3Bucket
+    Export:
+      Name: !Sub '${AWS::StackName}-S3BucketName'
+
+  PresignedUrlFunctionArn:
+    Description: 'Presigned URL Lambda function ARN'
+    Value: !GetAtt PresignedUrlFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-PresignedUrlFunctionArn'
+
+  RekognitionFunctionArn:
+    Description: 'Rekognition Lambda function ARN'
+    Value: !GetAtt RekognitionFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-RekognitionFunctionArn'
+
+  LLMFunctionArn:
+    Description: 'LLM Lambda function ARN'
+    Value: !GetAtt LLMFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-LLMFunctionArn'
+
+  OrchestratorFunctionArn:
+    Description: 'Orchestrator Lambda function ARN'
+    Value: !GetAtt OrchestratorFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-OrchestratorFunctionArn'

@@ -1,0 +1,384 @@
+# Deployment Configuration for Accessibility Checker API
+# This file contains all deployment settings and environment-specific configurations
+
+# Project Information
+project:
+  name: "accessibility-checker"
+  version: "1.0.0"
+  description: "Home Accessibility Checker API - AWS Lambda and Express.js backends"
+
+# AWS Configuration
+aws:
+  region: "us-east-1"
+  account_id: "${AWS_ACCOUNT_ID}"
+  
+  # S3 Buckets
+  buckets:
+    images:
+      name: "${PROJECT_NAME}-images-${ENVIRONMENT}-${AWS_ACCOUNT_ID}"
+      cors_enabled: true
+      versioning_enabled: true
+      lifecycle_policy:
+        - id: "delete_old_versions"
+          status: "Enabled"
+          noncurrent_version_expiration:
+            noncurrent_days: 30
+    
+    deployments:
+      name: "${PROJECT_NAME}-deployments-${ENVIRONMENT}-${AWS_ACCOUNT_ID}"
+      versioning_enabled: true
+      lifecycle_policy:
+        - id: "delete_old_deployments"
+          status: "Enabled"
+          noncurrent_version_expiration:
+            noncurrent_days: 7
+
+  # Lambda Functions
+  lambda:
+    runtime: "python3.11"
+    timeout: 60
+    memory_size: 512
+    reserved_concurrency:
+      presigned_url: 10
+      rekognition: 20
+      llm: 5
+      orchestrator: 15
+    
+    # Environment Variables
+    environment_variables:
+      S3_BUCKET_NAME: "${S3_BUCKET_NAME}"
+      AWS_REGION: "${AWS_REGION}"
+      BEDROCK_MODEL_ID: "anthropic.claude-3-sonnet-20240229-v1:0"
+      CACHE_TABLE_NAME: "${CACHE_TABLE_NAME}"
+      LOG_LEVEL: "INFO"
+    
+    # Functions Configuration
+    functions:
+      presigned_url:
+        name: "presigned-url-generator-${ENVIRONMENT}"
+        handler: "lambda_function.lambda_handler"
+        description: "Generates presigned S3 upload URLs"
+        timeout: 30
+        memory_size: 256
+        environment:
+          MAX_FILE_SIZE: "10485760"
+          ALLOWED_EXTENSIONS: "jpg,jpeg,png,webp"
+      
+      rekognition:
+        name: "rekognition-handler-${ENVIRONMENT}"
+        handler: "lambda_function.lambda_handler"
+        description: "Processes images with Amazon Rekognition"
+        timeout: 60
+        memory_size: 512
+        environment:
+          MAX_LABELS: "50"
+          MIN_CONFIDENCE: "70"
+      
+      llm:
+        name: "llm-handler-${ENVIRONMENT}"
+        handler: "lambda_function.lambda_handler"
+        description: "Generates accessibility recommendations using Bedrock"
+        timeout: 60
+        memory_size: 1024
+        environment:
+          MAX_TOKENS: "2000"
+          TEMPERATURE: "0.3"
+      
+      orchestrator:
+        name: "orchestrator-handler-${ENVIRONMENT}"
+        handler: "lambda_function.lambda_handler"
+        description: "Coordinates the entire accessibility analysis workflow"
+        timeout: 300
+        memory_size: 1024
+        environment:
+          MAX_IMAGES: "5"
+          BATCH_SIZE: "3"
+
+  # API Gateway
+  api_gateway:
+    name: "accessibility-checker-api-${ENVIRONMENT}"
+    description: "Accessibility Checker API Gateway"
+    stage: "${ENVIRONMENT}"
+    cors:
+      enabled: true
+      allowed_origins: "*"
+      allowed_headers: "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token"
+      allowed_methods: "GET,POST,PUT,DELETE,OPTIONS"
+    
+    # Endpoints
+    endpoints:
+      presigned_url:
+        path: "/presigned-url"
+        method: "POST"
+        function: "presigned-url-generator-${ENVIRONMENT}"
+        description: "Generate presigned S3 upload URLs"
+      
+      analyze:
+        path: "/analyze"
+        method: "POST"
+        function: "orchestrator-handler-${ENVIRONMENT}"
+        description: "Analyze images for accessibility"
+
+  # DynamoDB
+  dynamodb:
+    cache_table:
+      name: "accessibility-checker-cache-${ENVIRONMENT}"
+      billing_mode: "PAY_PER_REQUEST"
+      attributes:
+        - name: "cache_key"
+          type: "S"
+      key_schema:
+        - attribute_name: "cache_key"
+          key_type: "HASH"
+      ttl:
+        attribute_name: "ttl"
+        enabled: true
+      point_in_time_recovery:
+        enabled: true
+
+  # CloudWatch
+  cloudwatch:
+    log_groups:
+      - name: "/aws/lambda/presigned-url-generator-${ENVIRONMENT}"
+        retention_days: 14
+      - name: "/aws/lambda/rekognition-handler-${ENVIRONMENT}"
+        retention_days: 14
+      - name: "/aws/lambda/llm-handler-${ENVIRONMENT}"
+        retention_days: 14
+      - name: "/aws/lambda/orchestrator-handler-${ENVIRONMENT}"
+        retention_days: 14
+    
+    alarms:
+      - name: "lambda-errors-${ENVIRONMENT}"
+        metric: "Errors"
+        threshold: 5
+        period: 300
+        evaluation_periods: 2
+      
+      - name: "lambda-duration-${ENVIRONMENT}"
+        metric: "Duration"
+        threshold: 30000
+        period: 300
+        evaluation_periods: 2
+
+  # IAM Roles
+  iam:
+    lambda_execution_role:
+      name: "accessibility-checker-lambda-role-${ENVIRONMENT}"
+      policies:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+        - "arn:aws:iam::aws:policy/AmazonRekognitionFullAccess"
+        - "arn:aws:iam::aws:policy/AmazonBedrockFullAccess"
+        - "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+        - "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
+
+# Express.js Configuration
+express:
+  # Server Configuration
+  server:
+    port: 3000
+    host: "0.0.0.0"
+    environment: "${NODE_ENV}"
+    log_level: "info"
+  
+  # Dependencies
+  dependencies:
+    - "express@^4.18.2"
+    - "multer@^1.4.5-lts.1"
+    - "openai@^4.20.1"
+    - "express-rate-limit@^7.1.5"
+    - "cors@^2.8.5"
+    - "helmet@^7.1.0"
+    - "morgan@^1.10.0"
+    - "dotenv@^16.3.1"
+    - "sharp@^0.32.6"
+    - "uuid@^9.0.1"
+    - "joi@^17.11.0"
+    - "winston@^3.11.0"
+  
+  # Environment Variables
+  environment_variables:
+    PORT: 3000
+    NODE_ENV: "${NODE_ENV}"
+    OPENAI_API_KEY: "${OPENAI_API_KEY}"
+    ALLOWED_ORIGINS: "*"
+    RATE_LIMIT_WINDOW_MS: "900000"
+    RATE_LIMIT_MAX_REQUESTS: "100"
+    MAX_FILE_SIZE: "10485760"
+    MAX_FILES: "5"
+    IMAGE_QUALITY: "85"
+    MAX_IMAGE_WIDTH: "2048"
+    MAX_IMAGE_HEIGHT: "2048"
+    TEMP_DIR: "./tmp"
+    UPLOAD_DIR: "./tmp/uploads"
+    HELMET_ENABLED: "true"
+    CORS_ENABLED: "true"
+    LOG_FORMAT: "combined"
+  
+  # Deployment Platforms
+  platforms:
+    railway:
+      config_file: "railway.json"
+      build_command: "npm install"
+      start_command: "npm start"
+      health_check_path: "/health"
+    
+    render:
+      config_file: "render.yaml"
+      build_command: "npm install"
+      start_command: "npm start"
+      health_check_path: "/health"
+    
+    vercel:
+      config_file: "vercel.json"
+      build_command: "npm install"
+      start_command: "npm start"
+    
+    heroku:
+      config_file: "Procfile"
+      build_command: "npm install"
+      start_command: "npm start"
+
+# Environment-Specific Configurations
+environments:
+  dev:
+    aws:
+      region: "us-east-1"
+      lambda:
+        timeout: 60
+        memory_size: 512
+        reserved_concurrency:
+          presigned_url: 5
+          rekognition: 10
+          llm: 3
+          orchestrator: 8
+    
+    express:
+      server:
+        port: 3000
+        log_level: "debug"
+      environment_variables:
+        NODE_ENV: "development"
+        LOG_LEVEL: "debug"
+        RATE_LIMIT_MAX_REQUESTS: "200"
+  
+  prod:
+    aws:
+      region: "us-east-1"
+      lambda:
+        timeout: 60
+        memory_size: 512
+        reserved_concurrency:
+          presigned_url: 10
+          rekognition: 20
+          llm: 5
+          orchestrator: 15
+    
+    express:
+      server:
+        port: 3000
+        log_level: "info"
+      environment_variables:
+        NODE_ENV: "production"
+        LOG_LEVEL: "info"
+        RATE_LIMIT_MAX_REQUESTS: "100"
+
+# Deployment Scripts
+scripts:
+  deploy_lambda:
+    command: "./deploy.sh dev lambda"
+    description: "Deploy Lambda backend to development"
+  
+  deploy_express:
+    command: "./deploy.sh dev express"
+    description: "Deploy Express.js backend to development"
+  
+  deploy_prod_lambda:
+    command: "./deploy.sh prod lambda"
+    description: "Deploy Lambda backend to production"
+  
+  deploy_prod_express:
+    command: "./deploy.sh prod express"
+    description: "Deploy Express.js backend to production"
+  
+  test_lambda:
+    command: "sam local start-api"
+    description: "Test Lambda functions locally"
+  
+  test_express:
+    command: "cd express-backend && npm run dev"
+    description: "Test Express.js backend locally"
+
+# Monitoring and Alerting
+monitoring:
+  metrics:
+    - name: "lambda_invocations"
+      description: "Number of Lambda function invocations"
+    - name: "lambda_duration"
+      description: "Lambda function execution duration"
+    - name: "lambda_errors"
+      description: "Number of Lambda function errors"
+    - name: "api_gateway_requests"
+      description: "Number of API Gateway requests"
+    - name: "api_gateway_4xx_errors"
+      description: "Number of 4xx errors from API Gateway"
+    - name: "api_gateway_5xx_errors"
+      description: "Number of 5xx errors from API Gateway"
+  
+  alarms:
+    - name: "high_error_rate"
+      metric: "lambda_errors"
+      threshold: 10
+      period: 300
+      evaluation_periods: 2
+      action: "sns_notification"
+    
+    - name: "high_duration"
+      metric: "lambda_duration"
+      threshold: 30000
+      period: 300
+      evaluation_periods: 2
+      action: "sns_notification"
+
+# Security
+security:
+  iam:
+    least_privilege: true
+    rotate_keys: true
+    mfa_required: true
+  
+  api_gateway:
+    api_key_required: false
+    throttling:
+      enabled: true
+      rate_limit: 1000
+      burst_limit: 2000
+  
+  lambda:
+    vpc_config:
+      enabled: false
+    dead_letter_queue:
+      enabled: true
+    tracing:
+      enabled: true
+      mode: "Active"
+
+# Cost Optimization
+cost_optimization:
+  lambda:
+    reserved_concurrency: true
+    provisioned_concurrency: false
+    cold_start_optimization: true
+  
+  s3:
+    lifecycle_policies: true
+    intelligent_tiering: false
+  
+  cloudwatch:
+    log_retention: 14
+    custom_metrics: false
+  
+  api_gateway:
+    caching: false
+    request_compression: true

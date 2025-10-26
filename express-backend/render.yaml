@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: accessibility-checker-api
+    env: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: LOG_LEVEL
+        value: info
+      - key: OPENAI_API_KEY
+        sync: false  # Set this in Render dashboard
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "900000"
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: "100"
+      - key: MAX_FILE_SIZE
+        value: "10485760"
+      - key: MAX_FILES
+        value: "5"
+      - key: IMAGE_QUALITY
+        value: "85"
+      - key: MAX_IMAGE_WIDTH
+        value: "2048"
+      - key: MAX_IMAGE_HEIGHT
+        value: "2048"
+      - key: TEMP_DIR
+        value: "./tmp"
+      - key: UPLOAD_DIR
+        value: "./tmp/uploads"
+      - key: HELMET_ENABLED
+        value: "true"
+      - key: CORS_ENABLED
+        value: "true"
+      - key: LOG_FORMAT
+        value: "combined"

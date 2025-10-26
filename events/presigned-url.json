@@ -1,0 +1,9 @@
+{
+  "httpMethod": "POST",
+  "path": "/presigned-url",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"filename\": \"house1.jpg\", \"content_type\": \"image/jpeg\"}",
+  "isBase64Encoded": false
+}

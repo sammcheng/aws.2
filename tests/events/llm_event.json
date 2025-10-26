@@ -1,0 +1,31 @@
+{
+  "rekognition_results": {
+    "labels": [
+      {
+        "name": "Stairs",
+        "confidence": 95.5,
+        "category": "accessibility"
+      },
+      {
+        "name": "Door",
+        "confidence": 88.2,
+        "category": "accessibility"
+      },
+      {
+        "name": "Bathroom",
+        "confidence": 92.1,
+        "category": "accessibility"
+      },
+      {
+        "name": "Kitchen",
+        "confidence": 85.7,
+        "category": "accessibility"
+      }
+    ],
+    "image_count": 2
+  },
+  "image_metadata": {
+    "total_images": 2,
+    "analysis_type": "accessibility_assessment"
+  }
+}

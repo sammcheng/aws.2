@@ -1,0 +1,9 @@
+{
+  "httpMethod": "POST",
+  "path": "/analyze",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"images\": [{\"bucket\": \"accessibility-checker-uploads\", \"key\": \"uploads/test-image1.jpg\"}, {\"bucket\": \"accessibility-checker-uploads\", \"key\": \"uploads/test-image2.jpg\"}]}",
+  "isBase64Encoded": false
+}

@@ -1,0 +1,20 @@
+{
+  "name": "accessibility-checker-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for Accessibility Checker - Home Analysis Tool",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "accessibility",
+    "home-analysis",
+    "frontend",
+    "web-scraping"
+  ],
+  "author": "Accessibility Checker Team",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}

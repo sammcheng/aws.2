@@ -1,0 +1,16 @@
+{
+  "images": [
+    {
+      "bucket": "accessibility-checker-uploads",
+      "key": "uploads/test-house-1.jpg"
+    },
+    {
+      "bucket": "accessibility-checker-uploads", 
+      "key": "uploads/test-house-2.jpg"
+    },
+    {
+      "bucket": "accessibility-checker-uploads",
+      "key": "uploads/test-house-3.jpg"
+    }
+  ]
+}
