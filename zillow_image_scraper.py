@@ -855,9 +855,9 @@ def extract_property_details(html_content, url):
                                 details['bedrooms'] = "Multiple"
                                 details['bathrooms'] = "Multiple"
                                 details['squareFeet'] = "Various"
-                                
             except Exception as e:
                 print(f"Error parsing Zillow URL: {e}")
+                pass
         
         # Look for ZIP code in the HTML content
         import re
