@@ -1,17 +1,17 @@
 /**
  * Comprehensive Analysis Service
- * Combines AWS Rekognition object detection with Gemini AI analysis
+ * Combines AWS Rekognition object detection with OpenRouter AI analysis
  * Provides complete accessibility assessment pipeline
  */
 
 const RekognitionService = require('./rekognition-service');
-const GeminiService = require('./gemini-service');
+const OpenRouterService = require('./openrouter-service');
 const winston = require('winston');
 
 class ComprehensiveAnalysisService {
     constructor() {
         this.rekognitionService = new RekognitionService();
-        this.geminiService = new GeminiService();
+        this.openrouterService = new OpenRouterService();
         
         this.logger = winston.createLogger({
             level: 'info',
@@ -91,10 +91,10 @@ class ComprehensiveAnalysisService {
             const claudePrompt = this.createClaudePrompt(analysisResults);
             
             try {
-                this.logger.info('Starting Gemini analysis');
+                this.logger.info('Starting OpenRouter analysis');
                 
-                // Use the first image for Gemini analysis (or create a summary image)
-                const claudeResult = await this.geminiService.analyzeAccessibility(
+                // Use the first image for OpenRouter analysis (or create a summary image)
+                const claudeResult = await this.openrouterService.analyzeAccessibility(
                     images[0].base64, 
                     'comprehensive_analysis'
                 );
