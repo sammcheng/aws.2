@@ -12,8 +12,8 @@ class RekognitionService {
         this.rekognitionClient = new RekognitionClient({
             region: process.env.AWS_DEFAULT_REGION || 'us-east-1',
             credentials: {
-                accessKeyId: process.env.REKOGNITION_ACCESS_KEY_ID || 'AKIAZCFIPEU2AFQVL4OF',
-                secretAccessKey: process.env.REKOGNITION_SECRET_ACCESS_KEY || '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'
+                accessKeyId: process.env.REKOGNITION_ACCESS_KEY_ID,
+                secretAccessKey: process.env.REKOGNITION_SECRET_ACCESS_KEY
             }
         });
         

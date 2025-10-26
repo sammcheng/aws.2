@@ -8,13 +8,13 @@ const winston = require('winston');
 
 class BedrockService {
   constructor() {
-    this.bedrockClient = new BedrockRuntimeClient({
-      region: process.env.AWS_DEFAULT_REGION || 'us-east-1',
-      credentials: {
-        accessKeyId: process.env.BEDROCK_ACCESS_KEY_ID || 'AKIAZCFIPEU2K52XKPXG',
-        secretAccessKey: process.env.BEDROCK_SECRET_ACCESS_KEY || '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'
-      }
-    });
+        this.bedrockClient = new BedrockRuntimeClient({
+            region: process.env.AWS_DEFAULT_REGION || 'us-east-1',
+            credentials: {
+                accessKeyId: process.env.BEDROCK_ACCESS_KEY_ID,
+                secretAccessKey: process.env.BEDROCK_SECRET_ACCESS_KEY
+            }
+        });
     
     this.logger = winston.createLogger({
       level: 'info',
