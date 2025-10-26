@@ -1020,127 +1020,7 @@
             <div class="results-section" id="resultsSection" style="display: none;">
                 <h2>📊 Accessibility Analysis</h2>
                 <div id="resultsContent">
-                    <div class="analysis-menu">
-                        <div class="analysis-item" onclick="toggleDropdown('mobility')">
-                            <div class="analysis-header">
-                                <span class="analysis-icon">♿</span>
-                                <span class="analysis-title">Mobility & Movement</span>
-                                <span class="dropdown-arrow">▼</span>
-                            </div>
-                            <div class="analysis-dropdown" id="mobility-dropdown">
-                                <div class="dropdown-content">
-                                    <h4>Key Areas Analyzed:</h4>
-                                    <ul>
-                                        <li>Wheelchair accessibility</li>
-                                        <li>Wide doorways and hallways</li>
-                                        <li>Ramp access</li>
-                                        <li>Elevator availability</li>
-                                        <li>Level surfaces</li>
-                                    </ul>
-                                    <div class="analysis-score">
-                                        <span class="score-label">Score:</span>
-                                        <span class="score-value">85/100</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="analysis-item" onclick="toggleDropdown('vision')">
-                            <div class="analysis-header">
-                                <span class="analysis-icon">👁️</span>
-                                <span class="analysis-title">Visual Accessibility</span>
-                                <span class="dropdown-arrow">▼</span>
-                            </div>
-                            <div class="analysis-dropdown" id="vision-dropdown">
-                                <div class="dropdown-content">
-                                    <h4>Key Areas Analyzed:</h4>
-                                    <ul>
-                                        <li>High contrast surfaces</li>
-                                        <li>Good lighting levels</li>
-                                        <li>Clear visual indicators</li>
-                                        <li>Braille signage</li>
-                                        <li>Color contrast ratios</li>
-                                    </ul>
-                                    <div class="analysis-score">
-                                        <span class="score-label">Score:</span>
-                                        <span class="score-value">78/100</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="analysis-item" onclick="toggleDropdown('hearing')">
-                            <div class="analysis-header">
-                                <span class="analysis-icon">👂</span>
-                                <span class="analysis-title">Hearing Accessibility</span>
-                                <span class="dropdown-arrow">▼</span>
-                            </div>
-                            <div class="analysis-dropdown" id="hearing-dropdown">
-                                <div class="dropdown-content">
-                                    <h4>Key Areas Analyzed:</h4>
-                                    <ul>
-                                        <li>Visual fire alarms</li>
-                                        <li>Doorbell alternatives</li>
-                                        <li>Acoustic treatments</li>
-                                        <li>Assistive listening systems</li>
-                                        <li>Noise reduction features</li>
-                                    </ul>
-                                    <div class="analysis-score">
-                                        <span class="score-label">Score:</span>
-                                        <span class="score-value">72/100</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="analysis-item" onclick="toggleDropdown('cognitive')">
-                            <div class="analysis-header">
-                                <span class="analysis-icon">🧠</span>
-                                <span class="analysis-title">Cognitive Accessibility</span>
-                                <span class="dropdown-arrow">▼</span>
-                            </div>
-                            <div class="analysis-dropdown" id="cognitive-dropdown">
-                                <div class="dropdown-content">
-                                    <h4>Key Areas Analyzed:</h4>
-                                    <ul>
-                                        <li>Clear navigation paths</li>
-                                        <li>Consistent design patterns</li>
-                                        <li>Simple control interfaces</li>
-                                        <li>Memory aids and reminders</li>
-                                        <li>Reduced cognitive load</li>
-                                    </ul>
-                                    <div class="analysis-score">
-                                        <span class="score-label">Score:</span>
-                                        <span class="score-value">88/100</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="analysis-item" onclick="toggleDropdown('safety')">
-                            <div class="analysis-header">
-                                <span class="analysis-icon">🛡️</span>
-                                <span class="analysis-title">Safety & Emergency</span>
-                                <span class="dropdown-arrow">▼</span>
-                            </div>
-                            <div class="analysis-dropdown" id="safety-dropdown">
-                                <div class="dropdown-content">
-                                    <h4>Key Areas Analyzed:</h4>
-                                    <ul>
-                                        <li>Emergency egress routes</li>
-                                        <li>Grab bars and handrails</li>
-                                        <li>Non-slip surfaces</li>
-                                        <li>Emergency communication</li>
-                                        <li>Fall prevention measures</li>
-                                    </ul>
-                                    <div class="analysis-score">
-                                        <span class="score-label">Score:</span>
-                                        <span class="score-value">91/100</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Results will be populated by AI analysis -->
                 </div>
             </div>
         </div>
@@ -1634,7 +1514,17 @@
 
             } catch (error) {
                 console.error('❌ Analysis failed:', error);
-                alert(`Analysis failed: ${error.message}\n\nPlease make sure your Express.js backend is running and has proper AWS credentials configured.`);
+                
+                // Show error in results section instead of popup
+                const resultsSection = document.getElementById('resultsSection');
+                resultsSection.style.display = 'block';
+                resultsSection.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Analysis Failed</h3>
+                        <p>${error.message}</p>
+                        <p><strong>Please make sure your Express.js backend is running and has proper AWS credentials configured.</strong></p>
+                    </div>
+                `;
                 
                 analyzeBtn.disabled = false;
                 analyzeBtn.textContent = '🔍 Analyze Accessibility';
