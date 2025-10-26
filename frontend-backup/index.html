@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessibility Checker - Home Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #1e1e2e;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .image-display-section {
+            background: #1e1e2e;
+            border: 1px solid #4a5568;
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .image-viewer {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .image-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #2d3748;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            min-height: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .no-images-placeholder {
+            text-align: center;
+            color: #a0a0a0;
+        }
+
+        .placeholder-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .no-images-placeholder h3 {
+            color: #e0e0e0;
+            margin-bottom: 10px;
+        }
+
+        .image-navigation {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .nav-btn {
+            background: #2d3748;
+            border: 1px solid #4a5568;
+            color: #e0e0e0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #4a5568;
+            border-color: #4facfe;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+
+        .property-address {
+            background: #2d3748;
+            border: 1px solid #4a5568;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .property-address h4 {
+            color: #e0e0e0;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .property-address p {
+            color: #a0a0a0;
+            margin: 0 0 15px 0;
+        }
+
+        .property-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-row:first-child .property-input {
+            flex: 1;
+        }
+
+        .form-row:nth-child(2) .property-input:nth-child(1) {
+            flex: 2;
+        }
+
+        .form-row:nth-child(2) .property-input:nth-child(2) {
+            flex: 1;
+        }
+
+        .form-row:nth-child(2) .property-input:nth-child(3) {
+            flex: 1;
+        }
+
+        .form-row:nth-child(4) .property-input {
+            flex: 1;
+        }
+
+        .form-row:nth-child(5) .property-input:nth-child(1) {
+            flex: 1;
+        }
+
+        .form-row:nth-child(5) .property-input:nth-child(2) {
+            flex: 1;
+        }
+
+        .property-input {
+            background: #1e1e2e;
+            border: 1px solid #4a5568;
+            color: #e0e0e0;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .property-input:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.2);
+        }
+
+        .property-input::placeholder {
+            color: #a0a0a0;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .save-btn:hover {
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            transform: translateY(-1px);
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .reset-btn:hover {
+            background: linear-gradient(135deg, #c53030 0%, #9c2626 100%);
+            transform: translateY(-1px);
+        }
+
+        .property-display {
+            text-align: center;
+        }
+
+        .property-display p {
+            color: #a0a0a0;
+            margin: 0 0 10px 0;
+        }
+
+        .property-display p:first-child {
+            color: #e0e0e0;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .property-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .edit-btn {
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            color: #e0e0e0;
+            border: 1px solid #4a5568;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .edit-btn:hover {
+            background: linear-gradient(135deg, #4a5568 0%, #718096 100%);
+            border-color: #4facfe;
+        }
+
+        .upload-controls-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .upload-card {
+            background: #2d3748;
+            border: 1px solid #4a5568;
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-card:hover {
+            border-color: #4facfe;
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.1);
+        }
+
+        .upload-card h3 {
+            color: #e0e0e0;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .upload-card p {
+            color: #a0a0a0;
+            margin-bottom: 20px;
+        }
+
+        .input-card {
+            border: 2px dashed #4a5568;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #2d3748;
+        }
+
+        .input-card:hover {
+            border-color: #4facfe;
+            background: #3a4552;
+        }
+
+        .input-card.dragover {
+            border-color: #4facfe;
+            background: #2a3441;
+        }
+
+        .input-card h3 {
+            color: #e0e0e0;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .input-card p {
+            color: #a0a0a0;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            color: white;
+            border: 1px solid #4a5568;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #4a5568 0%, #718096 100%);
+        }
+
+        .url-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #4a5568;
+            border-radius: 10px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            background: #1e1e2e;
+            color: #e0e0e0;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .url-input::placeholder {
+            color: #a0a0a0;
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: white;
+            border: 1px solid #4a5568;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 20px;
+            transition: transform 0.2s ease;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .preview-section {
+            margin-bottom: 30px;
+        }
+
+        .preview-section h3 {
+            color: #e0e0e0;
+            margin-bottom: 15px;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .preview-item {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .preview-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .preview-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255,0,0,0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .results-section {
+            background: #2d3748;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            border: 1px solid #4a5568;
+        }
+
+        .results-section h2 {
+            color: #e0e0e0;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .score-display {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .score-excellent { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .score-good { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .score-fair { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .score-poor { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .result-card {
+            background: #1e1e2e;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border: 1px solid #4a5568;
+        }
+
+        .result-card h3 {
+            color: #e0e0e0;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .result-list {
+            list-style: none;
+        }
+
+        .result-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #4a5568;
+            color: #a0a0a0;
+        }
+
+        .result-list li:last-child {
+            border-bottom: none;
+        }
+
+        .positive { color: #4CAF50; }
+        .negative { color: #f44336; }
+        .neutral { color: #2196F3; }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #a0a0a0;
+        }
+
+        .spinner {
+            border: 4px solid #4a5568;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #2d1b1b;
+            color: #ff6b6b;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #ff6b6b;
+        }
+
+        .success {
+            background: #1b2d1b;
+            color: #51cf66;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #51cf66;
+        }
+
+        /* Analysis Menu Styles */
+        .analysis-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .analysis-item {
+            background: #1e1e2e;
+            border: 1px solid #4a5568;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .analysis-item:hover {
+            border-color: #4facfe;
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.2);
+        }
+
+        .analysis-header {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            cursor: pointer;
+            background: #2d3748;
+            transition: background 0.3s ease;
+        }
+
+        .analysis-header:hover {
+            background: #3a4552;
+        }
+
+        .analysis-icon {
+            font-size: 1.5rem;
+            margin-right: 15px;
+        }
+
+        .analysis-title {
+            flex: 1;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #e0e0e0;
+        }
+
+        .dropdown-arrow {
+            font-size: 1.2rem;
+            color: #4facfe;
+            transition: transform 0.3s ease;
+        }
+
+        .analysis-item.active .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .analysis-dropdown {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .analysis-item.active .analysis-dropdown {
+            max-height: 500px;
+        }
+
+        .dropdown-content {
+            padding: 20px;
+            background: #1e1e2e;
+        }
+
+        .dropdown-content h4 {
+            color: #e0e0e0;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+
+        .dropdown-content ul {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .dropdown-content li {
+            padding: 8px 0;
+            color: #a0a0a0;
+            border-bottom: 1px solid #4a5568;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .dropdown-content li:before {
+            content: "•";
+            color: #4facfe;
+            position: absolute;
+            left: 0;
+        }
+
+        .dropdown-content li:last-child {
+            border-bottom: none;
+        }
+
+        .analysis-score {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #2d3748;
+            border-radius: 8px;
+            border: 1px solid #4a5568;
+        }
+
+        .score-label {
+            color: #a0a0a0;
+            font-weight: 500;
+        }
+
+        .score-value {
+            color: #4facfe;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .content-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .image-display-section {
+                min-height: 400px;
+            }
+            
+            .image-container {
+                min-height: 250px;
+            }
+        }
+
+        /* Analysis Results Styles */
+        .analysis-results {
+            background: #2a2a3e;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .analysis-results h3 {
+            color: #4a9eff;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .overall-score {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .overall-score h4 {
+            color: #e0e0e0;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .score-bar {
+            width: 100%;
+            height: 20px;
+            background: #1a1a2e;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b 0%, #ffa500 50%, #4ecdc4 100%);
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .rating {
+            color: #4facfe;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .analysis-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .analysis-details .analysis-item {
+            background: #1e1e2e;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #4a5568;
+        }
+
+        .analysis-details h4 {
+            color: #e0e0e0;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .features-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .feature-tag {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .feature-tag.positive {
+            background: #2d5a2d;
+            color: #51cf66;
+            border: 1px solid #51cf66;
+        }
+
+        .feature-tag.negative {
+            background: #5a2d2d;
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b;
+        }
+
+        .feature-tag.recommendation {
+            background: #2d4a5a;
+            color: #4facfe;
+            border: 1px solid #4facfe;
+        }
+
+        .analysis-meta {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #444;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .analysis-meta p {
+            margin-bottom: 8px;
+        }
+
+        /* Scoring Explanation Styles */
+        .scoring-explanation {
+            background: #1a1a2e;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 25px;
+            border: 1px solid #4a5568;
+        }
+
+        .scoring-explanation h4 {
+            color: #4facfe;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.3rem;
+        }
+
+        .scoring-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .scoring-category {
+            background: #2a2a3e;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #4a5568;
+        }
+
+        .scoring-category h5 {
+            color: #e0e0e0;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            border-bottom: 2px solid #4facfe;
+            padding-bottom: 8px;
+        }
+
+        .scoring-category ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .scoring-category li {
+            padding: 8px 0;
+            border-bottom: 1px solid #4a5568;
+            color: #a0a0a0;
+            font-size: 0.95rem;
+        }
+
+        .scoring-category li:last-child {
+            border-bottom: none;
+        }
+
+        .scoring-category strong {
+            color: #4facfe;
+            font-weight: 600;
+        }
+
+        .scoring-note {
+            grid-column: 1 / -1;
+            background: #2d3748;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .scoring-note p {
+            color: #a0a0a0;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .scoring-note strong {
+            color: #4facfe;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Accessibility Checker</h1>
+            <p>Analyze homes for accessibility features and barriers</p>
+        </div>
+
+        <div class="main-content">
+            <div class="content-layout">
+                <!-- Left Side - Image Display -->
+                <div class="image-display-section">
+                    <div class="image-viewer" id="imageViewer" style="display: none;">
+                        <div class="image-container">
+                            <img id="currentImage" src="" alt="Current image" style="display: none;">
+                            <div class="no-images-placeholder" id="noImagesPlaceholder">
+                                <div class="placeholder-icon">📷</div>
+                                <h3>No Images Selected</h3>
+                                <p>Upload images or scrape from a URL to get started</p>
+                            </div>
+                        </div>
+                        
+                        <div class="image-navigation" id="imageNavigation" style="display: none;">
+                            <button class="nav-btn" id="prevBtn" onclick="previousImage()">‹</button>
+                            <button class="nav-btn" id="nextBtn" onclick="nextImage()">›</button>
+                        </div>
+                        
+                        <div class="property-address" id="propertyAddress" style="display: none;">
+                            <h4>🏠 Property Details</h4>
+                            <div class="property-form" id="propertyForm">
+                                <div class="form-row">
+                                    <input type="text" id="addressLine" class="property-input" placeholder="Street Address" value="123 Main Street">
+                                </div>
+                                <div class="form-row">
+                                    <input type="text" id="city" class="property-input" placeholder="City" value="Anytown">
+                                    <input type="text" id="state" class="property-input" placeholder="State" value="CA">
+                                    <input type="text" id="zipCode" class="property-input" placeholder="ZIP Code" value="12345">
+                                </div>
+                                <div class="form-row">
+                                    <input type="text" id="propertyType" class="property-input" placeholder="Property Type (e.g., Single Family, Condo)" value="Single Family Home">
+                                </div>
+                                <div class="form-row">
+                                    <input type="number" id="bedrooms" class="property-input" placeholder="Bedrooms" value="3">
+                                    <input type="number" id="bathrooms" class="property-input" placeholder="Bathrooms" value="2">
+                                    <input type="number" id="squareFeet" class="property-input" placeholder="Square Feet" value="1500">
+                                </div>
+                                <div class="form-row">
+                                    <input type="number" id="yearBuilt" class="property-input" placeholder="Year Built" value="1995">
+                                    <input type="text" id="lotSize" class="property-input" placeholder="Lot Size" value="0.25 acres">
+                                </div>
+                                <div class="form-actions">
+                                    <button class="save-btn" onclick="savePropertyDetails()">💾 Save Details</button>
+                                    <button class="reset-btn" onclick="resetImages()">🔄 Reset Images</button>
+                                </div>
+                            </div>
+                            <div class="property-display" id="propertyDisplay" style="display: none;">
+                                <p id="addressText">123 Main Street, Anytown, CA 12345</p>
+                                <p id="propertyInfo">Single Family Home • 3 bed • 2 bath • 1,500 sq ft</p>
+                                <div class="property-actions">
+                                    <button class="edit-btn" onclick="editPropertyDetails()">✏️ Edit Details</button>
+                                    <button class="reset-btn" onclick="resetImages()">🔄 Reset Images</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side - Upload Controls -->
+                <div class="upload-controls-section">
+                    <div class="upload-card">
+                        <h3>📸 Upload Images</h3>
+                        <p>Drag and drop images or click to browse</p>
+                        <input type="file" id="fileInput" class="file-input" multiple accept="image/*">
+                        <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                            Choose Images
+                        </button>
+                    </div>
+
+                    <div class="upload-card">
+                        <h3>🌐 Web Scraping</h3>
+                        <p>Enter URLs to scrape images from</p>
+                        <input type="url" id="urlInput" class="url-input" placeholder="https://www.zillow.com/homedetails/...">
+                        <button class="upload-btn" onclick="scrapeImages()">Scrape Images</button>
+                        <div style="margin: 10px 0; padding: 10px; background: #2d3748; border-radius: 8px; font-size: 0.9rem; color: #a0a0a0; border: 1px solid #4a5568;">
+                            <strong style="color: #e0e0e0;">💡 Pro Tips:</strong><br>
+                            • Try Zillow, Realtor.com, or property sites<br>
+                            • If scraping fails, try manual image upload<br>
+                            • Some sites block automated scraping
+                        </div>
+                        <div id="scrapingStatus" style="margin-top: 10px; font-size: 0.9rem; color: #a0a0a0;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analyze Button -->
+            <button class="analyze-btn" id="analyzeBtn" onclick="analyzeImages()" disabled>
+                🔍 Analyze Accessibility
+            </button>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <h2>📊 Accessibility Analysis</h2>
+                <div id="resultsContent">
+                    <!-- Results will be populated by AI analysis -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="scraper.js"></script>
+    <script>
+        let selectedImages = [];
+        let currentImageIndex = 0;
+        const API_BASE = 'http://localhost:3000';
+        const imageScraper = new ImageScraper();
+
+        // File upload handling
+        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+        
+        // Add drag and drop to the upload card
+        const uploadCard = document.querySelector('.upload-card');
+        uploadCard.addEventListener('dragover', handleDragOver);
+        uploadCard.addEventListener('drop', handleDrop);
+        uploadCard.addEventListener('dragleave', handleDragLeave);
+
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            processFiles(files);
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(event) {
+            event.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('dragover');
+            const files = Array.from(event.dataTransfer.files);
+            processFiles(files);
+        }
+
+        function processFiles(files) {
+            // Clear existing images when uploading new files
+            selectedImages = [];
+            currentImageIndex = 0;
+            
+            // Set flag to show property details form for manual uploads
+            window.isManualUpload = true;
+            
+            files.forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        addImageToPreview(file.name, e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        async function scrapeImages() {
+            const url = document.getElementById('urlInput').value.trim();
+            const statusDiv = document.getElementById('scrapingStatus');
+            
+            if (!url) {
+                statusDiv.innerHTML = '<span style="color: red;">Please enter a URL</span>';
+                return;
+            }
+
+            // Clear existing images when scraping new URL
+            selectedImages = [];
+            currentImageIndex = 0;
+            
+            // Set flag to hide property details form for scraped content
+            window.isManualUpload = false;
+            
+            // Clear file input to show we're replacing uploaded images
+            document.getElementById('fileInput').value = '';
+
+            try {
+                statusDiv.innerHTML = `<span style="color: blue;">🔄 Scraping images...</span>`;
+                
+                // Call the Express backend API instead of browser-based scraping
+                const response = await fetch(`${API_BASE}/api/scrape`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url: url
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Scraping failed');
+                }
+
+                const result = await response.json();
+                
+                if (result.images.length === 0) {
+                    statusDiv.innerHTML = `
+                        <span style="color: orange;">⚠️ No images found on this page</span>
+                        <br><small style="color: #666;">
+                            Try: 1) Different URL 2) Manual upload 3) Check if site blocks scraping
+                        </small>
+                    `;
+                    return;
+                }
+
+                // Convert image URLs to base64 and add to preview
+                for (const img of result.images) {
+                    try {
+                        const base64 = await imageUrlToBase64(img.url);
+                        addImageToPreview(img.filename, `data:image/jpeg;base64,${base64}`);
+                    } catch (error) {
+                        console.warn(`Failed to load image ${img.url}:`, error);
+                    }
+                }
+
+                // Populate property details with scraped information
+                populateScrapedPropertyDetails(url, result.propertyDetails);
+
+                statusDiv.innerHTML = `<span style="color: green;">✅ Found and added ${result.images.length} images</span>`;
+                document.getElementById('urlInput').value = '';
+
+            } catch (error) {
+                console.error('Scraping error:', error);
+                statusDiv.innerHTML = `<span style="color: red;">❌ Error: ${error.message}</span>`;
+            }
+        }
+
+        // Helper function to convert image URL to base64
+        async function imageUrlToBase64(imageUrl) {
+            try {
+                const response = await fetch(imageUrl);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch image: ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            } catch (error) {
+                console.error('Error converting image to base64:', error);
+                throw error;
+            }
+        }
+
+        function addImageToPreview(filename, dataUrl) {
+            const imageId = Date.now() + Math.random();
+            selectedImages.push({
+                id: imageId,
+                filename: filename,
+                dataUrl: dataUrl
+            });
+
+            // If this is the first image being added, update the display
+            if (selectedImages.length === 1) {
+                updateImageDisplay();
+            } else {
+                // Just update navigation for additional images
+                updateNavigation();
+            }
+            updateAnalyzeButton();
+        }
+
+        function updateImageDisplay() {
+            const imageViewer = document.getElementById('imageViewer');
+            const noImagesPlaceholder = document.getElementById('noImagesPlaceholder');
+            const currentImage = document.getElementById('currentImage');
+            const imageNavigation = document.getElementById('imageNavigation');
+            const propertyAddress = document.getElementById('propertyAddress');
+            
+            if (selectedImages.length > 0) {
+                imageViewer.style.display = 'block';
+                noImagesPlaceholder.style.display = 'none';
+                imageNavigation.style.display = 'flex';
+                propertyAddress.style.display = 'block';
+                
+                // Show form for manual uploads, display for scraped content
+                if (window.isManualUpload) {
+                    document.getElementById('propertyForm').style.display = 'block';
+                    document.getElementById('propertyDisplay').style.display = 'none';
+                } else {
+                    // For scraped content, show the display with scraped property info
+                    document.getElementById('propertyForm').style.display = 'none';
+                    document.getElementById('propertyDisplay').style.display = 'block';
+                }
+                
+                // Show first image
+                currentImageIndex = 0;
+                showCurrentImage();
+                updateNavigation();
+            } else {
+                imageViewer.style.display = 'none';
+            }
+        }
+
+        function showCurrentImage() {
+            const currentImage = document.getElementById('currentImage');
+            if (selectedImages.length > 0) {
+                currentImage.src = selectedImages[currentImageIndex].dataUrl;
+                currentImage.style.display = 'block';
+            }
+        }
+
+        function updateNavigation() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.disabled = currentImageIndex === 0;
+            nextBtn.disabled = currentImageIndex === selectedImages.length - 1;
+        }
+
+        function previousImage() {
+            if (currentImageIndex > 0) {
+                currentImageIndex--;
+                showCurrentImage();
+                updateNavigation();
+            }
+        }
+
+        function nextImage() {
+            if (currentImageIndex < selectedImages.length - 1) {
+                currentImageIndex++;
+                showCurrentImage();
+                updateNavigation();
+            }
+        }
+
+        function savePropertyDetails() {
+            // Get form values
+            const addressLine = document.getElementById('addressLine').value;
+            const city = document.getElementById('city').value;
+            const state = document.getElementById('state').value;
+            const zipCode = document.getElementById('zipCode').value;
+            const propertyType = document.getElementById('propertyType').value;
+            const bedrooms = document.getElementById('bedrooms').value;
+            const bathrooms = document.getElementById('bathrooms').value;
+            const squareFeet = document.getElementById('squareFeet').value;
+            const yearBuilt = document.getElementById('yearBuilt').value;
+            const lotSize = document.getElementById('lotSize').value;
+            
+            // Update display
+            const addressText = document.getElementById('addressText');
+            const propertyInfo = document.getElementById('propertyInfo');
+            
+            addressText.textContent = `${addressLine}, ${city}, ${state} ${zipCode}`;
+            propertyInfo.textContent = `${propertyType} • ${bedrooms} bed • ${bathrooms} bath • ${parseInt(squareFeet).toLocaleString()} sq ft`;
+            
+            // Switch to display mode
+            document.getElementById('propertyForm').style.display = 'none';
+            document.getElementById('propertyDisplay').style.display = 'block';
+        }
+
+        function editPropertyDetails() {
+            // Switch back to form mode
+            document.getElementById('propertyForm').style.display = 'block';
+            document.getElementById('propertyDisplay').style.display = 'none';
+        }
+
+        function populateScrapedPropertyDetails(url, propertyDetails = {}) {
+            // Use scraped property details if available, otherwise fallback to URL parsing
+            let addressLine = propertyDetails.address || "Property from URL";
+            let city = propertyDetails.city || "Unknown";
+            let state = propertyDetails.state || "Unknown";
+            let zipCode = propertyDetails.zipCode || "00000";
+            let propertyType = propertyDetails.propertyType || "Property";
+            let bedrooms = propertyDetails.bedrooms || "N/A";
+            let bathrooms = propertyDetails.bathrooms || "N/A";
+            let squareFeet = propertyDetails.squareFeet || "N/A";
+            let yearBuilt = propertyDetails.yearBuilt || "N/A";
+            let lotSize = propertyDetails.lotSize || "N/A";
+            let price = propertyDetails.price || "N/A";
+            
+            // If no property details were scraped, try to extract from URL
+            if (!propertyDetails.address || propertyDetails.address === "Unknown Address") {
+                if (url.includes('zillow.com/homedetails/')) {
+                    try {
+                        // Parse Zillow URL format: /homedetails/1360-Tanaka-Dr-San-Jose-CA-95131/19561522_zpid/
+                        const urlParts = url.split('/homedetails/')[1];
+                        if (urlParts) {
+                            const addressPart = urlParts.split('/')[0];
+                            // Convert URL format to readable address
+                            // 1360-Tanaka-Dr-San-Jose-CA-95131 -> 1360 Tanaka Dr, San Jose, CA 95131
+                            const addressComponents = addressPart.split('-');
+                            
+                            if (addressComponents.length >= 4) {
+                                // Extract street number and name
+                                const streetNumber = addressComponents[0];
+                                const streetName = addressComponents.slice(1, -3).join(' ');
+                                
+                                // Extract city, state, zip
+                                const lastThree = addressComponents.slice(-3);
+                                if (lastThree.length >= 3) {
+                                    city = lastThree[0];
+                                    state = lastThree[1];
+                                    zipCode = lastThree[2];
+                                    
+                                    addressLine = `${streetNumber} ${streetName}`;
+                                    propertyType = "Single Family Residence";
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error parsing Zillow URL:', error);
+                        // Fallback to generic info
+                        addressLine = "Zillow Property";
+                        city = "From Zillow";
+                        state = "CA";
+                        zipCode = "00000";
+                        propertyType = "Zillow Listing";
+                    }
+                } else if (url.includes('realtor.com')) {
+                    addressLine = "Realtor.com Property";
+                    city = "From Realtor";
+                    state = "CA";
+                    zipCode = "00000";
+                    propertyType = "Realtor Listing";
+                } else {
+                    // Generic property info
+                    addressLine = "Scraped Property";
+                    city = "From URL";
+                    state = "CA";
+                    zipCode = "00000";
+                    propertyType = "Web Listing";
+                }
+            }
+            
+            // Update the display
+            const addressText = document.getElementById('addressText');
+            const propertyInfo = document.getElementById('propertyInfo');
+            
+            addressText.textContent = `${addressLine}, ${city}, ${state} ${zipCode}`;
+            
+            // Format property info with available details
+            let propertyInfoText = propertyType;
+            if (bedrooms !== "N/A") propertyInfoText += ` • ${bedrooms} bed`;
+            if (bathrooms !== "N/A") propertyInfoText += ` • ${bathrooms} bath`;
+            if (squareFeet !== "N/A") propertyInfoText += ` • ${parseInt(squareFeet).toLocaleString()} sq ft`;
+            if (yearBuilt !== "N/A") propertyInfoText += ` • Built ${yearBuilt}`;
+            if (price !== "N/A") propertyInfoText += ` • ${price}`;
+            
+            propertyInfo.textContent = propertyInfoText;
+            
+            // Also update the form fields if they exist
+            if (document.getElementById('addressLine')) {
+                document.getElementById('addressLine').value = addressLine;
+                document.getElementById('city').value = city;
+                document.getElementById('state').value = state;
+                document.getElementById('zipCode').value = zipCode;
+                document.getElementById('propertyType').value = propertyType;
+                document.getElementById('bedrooms').value = bedrooms;
+                document.getElementById('bathrooms').value = bathrooms;
+                document.getElementById('squareFeet').value = squareFeet;
+                document.getElementById('yearBuilt').value = yearBuilt;
+                document.getElementById('lotSize').value = lotSize;
+            }
+        }
+
+        function resetImages() {
+            // Clear all selected images
+            selectedImages = [];
+            currentImageIndex = 0;
+            
+            // Reset the image display
+            const imageViewer = document.getElementById('imageViewer');
+            const noImagesPlaceholder = document.getElementById('noImagesPlaceholder');
+            const currentImage = document.getElementById('currentImage');
+            const imageNavigation = document.getElementById('imageNavigation');
+            const propertyAddress = document.getElementById('propertyAddress');
+            
+            // Hide image viewer and show placeholder
+            imageViewer.style.display = 'none';
+            noImagesPlaceholder.style.display = 'block';
+            currentImage.style.display = 'none';
+            imageNavigation.style.display = 'none';
+            propertyAddress.style.display = 'none';
+            
+            // Reset property form to default values
+            document.getElementById('addressLine').value = '123 Main Street';
+            document.getElementById('city').value = 'Anytown';
+            document.getElementById('state').value = 'CA';
+            document.getElementById('zipCode').value = '12345';
+            document.getElementById('propertyType').value = 'Single Family Home';
+            document.getElementById('bedrooms').value = '3';
+            document.getElementById('bathrooms').value = '2';
+            document.getElementById('squareFeet').value = '1500';
+            document.getElementById('yearBuilt').value = '1995';
+            document.getElementById('lotSize').value = '0.25 acres';
+            
+            // Show form mode
+            document.getElementById('propertyForm').style.display = 'block';
+            document.getElementById('propertyDisplay').style.display = 'none';
+            
+            // Reset upload type flag
+            window.isManualUpload = false;
+            
+            // Clear file input
+            document.getElementById('fileInput').value = '';
+            
+            // Update analyze button
+            updateAnalyzeButton();
+            
+            // Clear URL input
+            document.getElementById('urlInput').value = '';
+            
+            // Clear scraping status
+            document.getElementById('scrapingStatus').innerHTML = '';
+        }
+
+        function updateAnalyzeButton() {
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            analyzeBtn.disabled = selectedImages.length === 0;
+        }
+
+        async function analyzeImages() {
+            if (selectedImages.length === 0) return;
+
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const resultsSection = document.getElementById('resultsSection');
+
+            // Show loading state
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = '🔄 Analyzing...';
+            resultsSection.style.display = 'block';
+
+            try {
+                // Convert selected images to base64
+                const imagesForAnalysis = [];
+                for (const image of selectedImages) {
+                    // Extract base64 from dataUrl (format: "data:image/jpeg;base64,/9j/4AAQ...")
+                    let base64;
+                    if (image.dataUrl && image.dataUrl.startsWith('data:')) {
+                        base64 = image.dataUrl.split(',')[1];
+                    } else {
+                        // Fallback: try to convert as blob if it's actually a blob
+                        try {
+                            base64 = await blobToBase64(image);
+                        } catch (error) {
+                            console.error('Error processing image:', error);
+                            continue; // Skip this image
+                        }
+                    }
+                    
+                    if (!base64) {
+                        console.warn('Skipping image with no base64 data:', image.filename);
+                        continue;
+                    }
+                    
+                    imagesForAnalysis.push({
+                        base64: base64,
+                        filename: image.filename || 'image.jpg',
+                        url: image.url || ''
+                    });
+                }
+
+                console.log(`🔍 Analyzing ${imagesForAnalysis.length} images with real AI...`);
+
+                // Call the real AI analysis API
+                const response = await fetch(`${API_BASE}/api/analyze`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        images: imagesForAnalysis
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API Error Response:', errorText);
+                    throw new Error(`Analysis failed: ${response.status} ${response.statusText} - ${errorText}`);
+                }
+
+                const analysisResult = await response.json();
+                console.log('✅ AI Analysis completed:', analysisResult);
+
+                // Display the real AI analysis results
+                displayAnalysisResults(analysisResult);
+
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = '🔍 Analyze Accessibility';
+
+            } catch (error) {
+                console.error('❌ Analysis failed:', error);
+                
+                // Show error in results section instead of popup
+                const resultsSection = document.getElementById('resultsSection');
+                resultsSection.style.display = 'block';
+                resultsSection.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Analysis Failed</h3>
+                        <p>${error.message}</p>
+                        <p><strong>Please make sure your Express.js backend is running and has proper AWS credentials configured.</strong></p>
+                    </div>
+                `;
+                
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = '🔍 Analyze Accessibility';
+            }
+        }
+
+        function displayAnalysisResults(analysisResult) {
+            const resultsSection = document.getElementById('resultsSection');
+            
+            if (!analysisResult.success || !analysisResult.analysis) {
+                resultsSection.innerHTML = '<div class="error">❌ Analysis failed. Please try again.</div>';
+                return;
+            }
+
+            const analysis = analysisResult.analysis;
+            
+            // Create results HTML
+            resultsSection.innerHTML = `
+                <div class="analysis-results">
+                    <h3>🤖 AI Analysis Results</h3>
+                    <div class="overall-score">
+                        <h4>Overall Accessibility Score: ${analysis.overall_score}/100</h4>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: ${analysis.overall_score}%"></div>
+                        </div>
+                        <p class="rating">Rating: ${analysis.accessibility_rating || 'Good'}</p>
+                    </div>
+                    
+                    <div class="analysis-details">
+                        <div class="analysis-item">
+                            <h4>✅ Positive Features (${analysis.accessibility_features?.length || 0})</h4>
+                            <div class="features-list">
+                                ${(analysis.accessibility_features || []).map(feature => `<span class="feature-tag positive">${feature}</span>`).join('')}
+                            </div>
+                        </div>
+                        
+                        <div class="analysis-item">
+                            <h4>⚠️ Barriers & Issues (${analysis.barriers?.length || 0})</h4>
+                            <div class="features-list">
+                                ${(analysis.barriers || []).map(barrier => `<span class="feature-tag negative">${barrier}</span>`).join('')}
+                            </div>
+                        </div>
+                        
+                        <div class="analysis-item">
+                            <h4>💡 Recommendations (${analysis.recommendations?.length || 0})</h4>
+                            <div class="features-list">
+                                ${(analysis.recommendations || []).map(rec => `<span class="feature-tag recommendation">${rec}</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-meta">
+                        <p><strong>Images Analyzed:</strong> ${analysis.analyzed_images}</p>
+                        <p><strong>Confidence:</strong> ${analysis.confidence || 'N/A'}%</p>
+                        <p><strong>Analysis Methods:</strong> ${Object.entries(analysis.analysis_methods || {}).filter(([key, value]) => value).map(([key]) => key).join(', ')}</p>
+                    </div>
+                    
+                    <!-- Scoring Explanation Section -->
+                    <div class="scoring-explanation">
+                        <h4>📊 How We Score Accessibility</h4>
+                        <div class="scoring-breakdown">
+                            <div class="scoring-category">
+                                <h5>✅ Positive Features (Add Points)</h5>
+                                <ul>
+                                    <li><strong>Ramp/Elevator/Lift:</strong> +15 points (major accessibility feature)</li>
+                                    <li><strong>Wide Doorway/Hallway:</strong> +12 points (wheelchair access)</li>
+                                    <li><strong>Grab Bar/Handrail:</strong> +10 points (safety features)</li>
+                                    <li><strong>Accessible Bathroom/Kitchen:</strong> +8 points (room accessibility)</li>
+                                    <li><strong>Good Lighting/Clear Pathway:</strong> +6 points (general improvements)</li>
+                                    <li><strong>Other positive features:</strong> +5 points</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="scoring-category">
+                                <h5>❌ Barriers (Subtract Points)</h5>
+                                <ul>
+                                    <li><strong>Steep/Narrow Stairs:</strong> -20 points (major barrier)</li>
+                                    <li><strong>Narrow Doorway/Hallway:</strong> -15 points (wheelchair barrier)</li>
+                                    <li><strong>High Threshold/Steps:</strong> -12 points (common barriers)</li>
+                                    <li><strong>Trip Hazards/Slippery Surfaces:</strong> -10 points (safety issues)</li>
+                                    <li><strong>Cluttered/Poor Lighting:</strong> -8 points (general issues)</li>
+                                    <li><strong>Other barriers:</strong> -5 points</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="scoring-category">
+                                <h5>🎯 Score Calculation</h5>
+                                <ul>
+                                    <li><strong>Base Score:</strong> 50 points (neutral starting point)</li>
+                                    <li><strong>Confidence Weighting:</strong> Higher confidence detections have more impact</li>
+                                    <li><strong>Final Score:</strong> Combined Rekognition + Claude AI analysis</li>
+                                    <li><strong>Range:</strong> 0-100 (0=Very Poor, 100=Excellent)</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="scoring-note">
+                                <p><strong>Note:</strong> This scoring system uses AWS Rekognition computer vision + Claude AI analysis. 
+                                Scores are based on detected objects and accessibility features, weighted by confidence levels.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleDropdown(factor) {
+            const dropdown = document.getElementById(`${factor}-dropdown`);
+            const item = dropdown.closest('.analysis-item');
+            
+            // Close all other dropdowns
+            document.querySelectorAll('.analysis-item').forEach(otherItem => {
+                if (otherItem !== item) {
+                    otherItem.classList.remove('active');
+                }
+            });
+            
+            // Toggle current dropdown
+            item.classList.toggle('active');
+        }
+
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        // Check if server is running
+        async function checkServerStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    console.log('✅ Server is running');
+                    const data = await response.json();
+                    console.log('Server status:', data);
+                } else {
+                    console.warn('⚠️ Server responded with error:', response.status);
+                }
+            } catch (error) {
+                console.error('❌ Server is not running:', error);
+                alert('Please start your Express.js server first!\n\nRun: cd express-backend && node server.js');
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (selectedImages.length > 0) {
+                if (event.key === 'ArrowLeft') {
+                    previousImage();
+                } else if (event.key === 'ArrowRight') {
+                    nextImage();
+                }
+            }
+        });
+
+        // Check server status on page load
+        checkServerStatus();
+    </script>
+</body>
+</html>
