@@ -2,8 +2,11 @@ const OpenAI = require('openai');
 
 async function testOpenRouterAPI() {
     try {
-        const apiKey = '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';
-        console.log('Testing OpenRouter API with key:', apiKey.substring(0, 20) + '...');
+        const apiKey = process.env.OPENROUTER_API_KEY;
+        if (!apiKey) {
+            throw new Error('OPENROUTER_API_KEY is not set');
+        }
+        console.log('Testing OpenRouter API with environment-provided key...');
         
         const openai = new OpenAI({
             apiKey: apiKey,
