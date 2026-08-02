@@ -2,8 +2,11 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 async function testGeminiAPI() {
     try {
-        const apiKey = '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';
-        console.log('Testing Gemini API with key:', apiKey.substring(0, 20) + '...');
+        const apiKey = process.env.OPENROUTER_API_KEY;
+        if (!apiKey) {
+            throw new Error('OPENROUTER_API_KEY is not set');
+        }
+        console.log('Testing Gemini API with environment-provided key...');
         
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
