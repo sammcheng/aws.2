@@ -2,8 +2,11 @@ const Groq = require('groq-sdk');
 
 async function testGroqAPI() {
     try {
-        const apiKey = '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';
-        console.log('Testing Groq API with key:', apiKey.substring(0, 20) + '...');
+        const apiKey = process.env.GROQ_API_KEY;
+        if (!apiKey) {
+            throw new Error('GROQ_API_KEY is not set');
+        }
+        console.log('Testing Groq API with environment-provided key...');
         
         const groq = new Groq({
             apiKey: apiKey,
